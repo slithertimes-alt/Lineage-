@@ -1,0 +1,96 @@
+{
+  "name": "Ember",
+  "description": "Forged in the Nether's heat. Fire cannot hurt you, but the cold bites deep.",
+  "icon": "minecraft:blaze_rod",
+  "impact": 3,
+  "xp_per_point": 120,
+  "xp_sources": [
+    { "type": "tick", "condition": "in_nether", "amount": 1 },
+    { "type": "tick", "condition": "in_lava", "amount": 3 },
+    { "type": "kill", "entity": "minecraft:blaze", "amount": 20 },
+    { "type": "kill", "entity": "minecraft:wither_skeleton", "amount": 20 },
+    { "type": "kill", "entity": "minecraft:ghast", "amount": 30 }
+  ],
+  "abilities": [
+    {
+      "id": "fireproof", "type": "damage_modifier", "name": "Fireproof",
+      "description": "Immune to fire and lava damage.",
+      "icon": "minecraft:magma_cream",
+      "damage_type": "#minecraft:is_fire", "multiplier": 0
+    },
+    {
+      "id": "frostbitten", "type": "damage_modifier", "name": "Frostbitten",
+      "description": "Freezing damage is doubled.",
+      "icon": "minecraft:powder_snow_bucket",
+      "damage_type": "minecraft:freeze", "multiplier": 2.0
+    },
+    {
+      "id": "nether_born", "type": "effect", "name": "Nether-Born",
+      "description": "Strength while in the Nether.",
+      "icon": "minecraft:netherrack",
+      "effect": "minecraft:strength", "condition": "in_nether"
+    },
+    {
+      "id": "lava_swimmer", "type": "effect", "name": "Lava Swimmer",
+      "description": "Regenerate while submerged in lava.",
+      "icon": "minecraft:lava_bucket",
+      "effect": "minecraft:regeneration", "amplifier": 1, "condition": "in_lava"
+    },
+    {
+      "id": "fire_bolt", "type": "fireball", "name": "Fire Bolt",
+      "description": "Hurl a fireball.",
+      "icon": "minecraft:fire_charge",
+      "power": 0, "cooldown": 4, "hunger_cost": 1, "sound": "minecraft:entity.blaze.shoot"
+    }
+  ],
+  "evolutions": [
+    {
+      "id": "blaze_blood", "name": "Blaze Blood",
+      "description": "Your strikes carry the Nether's fury.",
+      "icon": "minecraft:blaze_powder", "cost": 1,
+      "abilities": [
+        { "id": "blaze_strength", "type": "attribute", "name": "Blaze Blood", "description": "+2 attack damage.",
+          "icon": "minecraft:blaze_powder", "attribute": "minecraft:generic.attack_damage", "amount": 2 }
+      ]
+    },
+    {
+      "id": "molten_core", "name": "Molten Core",
+      "description": "A furnace burns where your heart should be.",
+      "icon": "minecraft:magma_block", "cost": 1, "requires": ["blaze_blood"],
+      "abilities": [
+        { "id": "core_health", "type": "attribute", "name": "Molten Core", "description": "+2 hearts.",
+          "icon": "minecraft:magma_block", "attribute": "minecraft:generic.max_health", "amount": 4 }
+      ]
+    },
+    {
+      "id": "inferno", "name": "Inferno",
+      "description": "Unleash devastating explosive fire. Choose this OR Magma Skin.",
+      "icon": "minecraft:ghast_tear", "cost": 2,
+      "requires": ["molten_core"], "excludes": ["magma_skin"],
+      "abilities": [
+        { "id": "inferno_orb", "type": "fireball", "name": "Inferno Orb",
+          "description": "Launch a huge explosive fireball.",
+          "icon": "minecraft:fire_charge", "power": 2, "cooldown": 10, "hunger_cost": 2,
+          "sound": "minecraft:entity.ghast.shoot" }
+      ]
+    },
+    {
+      "id": "magma_skin", "name": "Magma Skin",
+      "description": "Harden into living stone and erupt on command. Choose this OR Inferno.",
+      "icon": "minecraft:obsidian", "cost": 2,
+      "requires": ["molten_core"], "excludes": ["inferno"],
+      "abilities": [
+        { "id": "magma_armor", "type": "attribute", "name": "Magma Skin", "description": "+6 armor.",
+          "icon": "minecraft:obsidian", "attribute": "minecraft:generic.armor", "amount": 6 },
+        { "id": "eruption", "type": "command", "name": "Eruption",
+          "description": "Scorch every non-player entity within 5 blocks.",
+          "icon": "minecraft:lava_bucket",
+          "commands": [
+            "particle minecraft:flame ~ ~1 ~ 2 0.5 2 0.1 120",
+            "damage @e[distance=0.1..5,type=!minecraft:player] 6 minecraft:in_fire by @s"
+          ],
+          "cooldown": 12, "hunger_cost": 2, "sound": "minecraft:entity.generic.explode" }
+      ]
+    }
+  ]
+}

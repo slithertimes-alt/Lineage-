@@ -1,0 +1,85 @@
+{
+  "name": "Windwalker",
+  "description": "Light as a feather and twice as quick, but built more like a bird than a bear.",
+  "icon": "minecraft:feather",
+  "impact": 1,
+  "xp_per_point": 100,
+  "xp_sources": [
+    { "type": "tick", "condition": "sprinting", "amount": 1 },
+    { "type": "kill", "entity": "minecraft:phantom", "amount": 20 },
+    { "type": "kill", "entity": "any", "amount": 1 }
+  ],
+  "abilities": [
+    {
+      "id": "swift", "type": "attribute", "name": "Swift",
+      "description": "Move 20% faster.",
+      "icon": "minecraft:sugar",
+      "attribute": "minecraft:generic.movement_speed", "amount": 0.2, "operation": "multiply_base"
+    },
+    {
+      "id": "featherlight", "type": "damage_modifier", "name": "Featherlight",
+      "description": "Take 80% less fall damage.",
+      "icon": "minecraft:elytra",
+      "damage_type": "minecraft:fall", "multiplier": 0.2
+    },
+    {
+      "id": "hollow_bones", "type": "attribute", "name": "Hollow Bones",
+      "description": "-2 hearts.",
+      "icon": "minecraft:bone",
+      "attribute": "minecraft:generic.max_health", "amount": -4
+    },
+    {
+      "id": "gust_dash", "type": "dash", "name": "Gust Dash",
+      "description": "Dash forward in the direction you're looking.",
+      "icon": "minecraft:phantom_membrane",
+      "strength": 1.5, "upward": 0.25, "cooldown": 3, "hunger_cost": 1,
+      "sound": "minecraft:entity.ender_dragon.flap"
+    }
+  ],
+  "evolutions": [
+    {
+      "id": "featherfall", "name": "Featherfall",
+      "description": "Hold sneak in the air to drift gently down.",
+      "icon": "minecraft:feather", "cost": 1,
+      "abilities": [
+        { "id": "featherfall_effect", "type": "effect", "name": "Featherfall",
+          "description": "Slow falling while sneaking in the air.",
+          "icon": "minecraft:feather", "effect": "minecraft:slow_falling", "condition": "sneaking" }
+      ]
+    },
+    {
+      "id": "second_wind", "name": "Second Wind",
+      "description": "Your bones fill in a little.",
+      "icon": "minecraft:golden_apple", "cost": 1, "requires": ["featherfall"],
+      "abilities": [
+        { "id": "second_wind_hp", "type": "attribute", "name": "Second Wind", "description": "+2 hearts.",
+          "icon": "minecraft:golden_apple", "attribute": "minecraft:generic.max_health", "amount": 4 }
+      ]
+    },
+    {
+      "id": "gale_leap", "name": "Gale Leap",
+      "description": "Launch skyward. Choose this OR Wind Wall.",
+      "icon": "minecraft:rabbit_foot", "cost": 2,
+      "requires": ["featherfall"], "excludes": ["wind_wall"],
+      "abilities": [
+        { "id": "gale_leap_ability", "type": "dash", "name": "Gale Leap",
+          "description": "A huge leap upward and forward.",
+          "icon": "minecraft:rabbit_foot", "strength": 1.2, "upward": 1.1, "cooldown": 8, "hunger_cost": 2,
+          "sound": "minecraft:entity.phantom.flap" }
+      ]
+    },
+    {
+      "id": "wind_wall", "name": "Wind Wall",
+      "description": "Smother your enemies in a cushion of air. Choose this OR Gale Leap.",
+      "icon": "minecraft:white_banner", "cost": 2,
+      "requires": ["featherfall"], "excludes": ["gale_leap"],
+      "abilities": [
+        { "id": "wind_wall_ability", "type": "active_effect", "name": "Wind Wall",
+          "description": "Heavily slow every enemy within 5 blocks.",
+          "icon": "minecraft:white_banner", "effect": "minecraft:slowness", "amplifier": 3,
+          "duration": 80, "target": "nearby", "radius": 5, "cooldown": 12, "hunger_cost": 2,
+          "sound": "minecraft:entity.ender_dragon.flap" }
+      ]
+    }
+  ]
+}

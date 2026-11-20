@@ -1,0 +1,94 @@
+{
+  "name": "Merling",
+  "description": "Born of the tides. You are at home beneath the waves, but the dry world and its flames are unkind to you.",
+  "icon": "minecraft:heart_of_the_sea",
+  "impact": 2,
+  "xp_per_point": 120,
+  "xp_sources": [
+    { "type": "tick", "condition": "in_water", "amount": 1 },
+    { "type": "kill", "entity": "minecraft:drowned", "amount": 10 },
+    { "type": "kill", "entity": "minecraft:guardian", "amount": 25 }
+  ],
+  "abilities": [
+    {
+      "id": "gills", "type": "effect", "name": "Gills",
+      "description": "You can breathe underwater.",
+      "icon": "minecraft:pufferfish",
+      "effect": "minecraft:water_breathing"
+    },
+    {
+      "id": "tide_sight", "type": "effect", "name": "Tide Sight",
+      "description": "See clearly while submerged.",
+      "icon": "minecraft:ender_eye",
+      "effect": "minecraft:night_vision", "condition": "in_water", "duration": 260
+    },
+    {
+      "id": "strong_swimmer", "type": "attribute", "name": "Strong Swimmer",
+      "description": "Swim 40% faster.",
+      "icon": "minecraft:turtle_helmet",
+      "attribute": "forge:swim_speed", "amount": 0.4, "operation": "multiply_base"
+    },
+    {
+      "id": "parched_skin", "type": "damage_modifier", "name": "Parched Skin",
+      "description": "Fire burns you 50% harder.",
+      "icon": "minecraft:blaze_powder",
+      "damage_type": "#minecraft:is_fire", "multiplier": 1.5
+    },
+    {
+      "id": "tidal_surge", "type": "dash", "name": "Tidal Surge",
+      "description": "Burst forward through the water. Only usable while in water.",
+      "icon": "minecraft:nautilus_shell",
+      "strength": 1.6, "cooldown": 6, "hunger_cost": 1,
+      "use_condition": "in_water", "sound": "minecraft:entity.dolphin.jump"
+    }
+  ],
+  "evolutions": [
+    {
+      "id": "dolphins_grace", "name": "Dolphin's Grace",
+      "description": "Glide through water at incredible speed.",
+      "icon": "minecraft:prismarine_shard", "cost": 1,
+      "abilities": [
+        { "id": "grace", "type": "effect", "name": "Dolphin's Grace", "description": "Dolphin's Grace while swimming.",
+          "icon": "minecraft:prismarine_shard", "effect": "minecraft:dolphins_grace", "condition": "in_water" }
+      ]
+    },
+    {
+      "id": "thick_scales", "name": "Thick Scales",
+      "description": "Hardened scales give you extra armor.",
+      "icon": "minecraft:scute", "cost": 1, "requires": ["dolphins_grace"],
+      "abilities": [
+        { "id": "scales", "type": "attribute", "name": "Thick Scales", "description": "+4 armor.",
+          "icon": "minecraft:scute", "attribute": "minecraft:generic.armor", "amount": 4 }
+      ]
+    },
+    {
+      "id": "storm_caller", "name": "Storm Caller",
+      "description": "Command the tides. Choose this OR the Abyssal Hunter path.",
+      "icon": "minecraft:trident", "cost": 2,
+      "requires": ["thick_scales"], "excludes": ["abyssal_hunter"],
+      "abilities": [
+        { "id": "stormborn", "type": "effect", "name": "Stormborn", "description": "Regenerate while standing in rain.",
+          "icon": "minecraft:water_bucket", "effect": "minecraft:regeneration", "amplifier": 1, "condition": "in_rain" },
+        { "id": "riptide_pulse", "type": "active_effect", "name": "Riptide Pulse",
+          "description": "Slow every enemy within 6 blocks.",
+          "icon": "minecraft:prismarine_crystals", "effect": "minecraft:slowness", "amplifier": 2,
+          "duration": 100, "target": "nearby", "radius": 6, "cooldown": 15, "hunger_cost": 2,
+          "sound": "minecraft:entity.elder_guardian.curse" }
+      ]
+    },
+    {
+      "id": "abyssal_hunter", "name": "Abyssal Hunter",
+      "description": "Become an ambush predator. Choose this OR the Storm Caller path.",
+      "icon": "minecraft:nautilus_shell", "cost": 2,
+      "requires": ["thick_scales"], "excludes": ["storm_caller"],
+      "abilities": [
+        { "id": "predator", "type": "attribute", "name": "Predator", "description": "+3 attack damage.",
+          "icon": "minecraft:iron_sword", "attribute": "minecraft:generic.attack_damage", "amount": 3 },
+        { "id": "hunters_lunge", "type": "dash", "name": "Hunter's Lunge",
+          "description": "A vicious, far-reaching lunge. Only usable in water.",
+          "icon": "minecraft:tripwire_hook", "strength": 2.4, "cooldown": 10, "hunger_cost": 2,
+          "use_condition": "in_water" }
+      ]
+    }
+  ]
+}
