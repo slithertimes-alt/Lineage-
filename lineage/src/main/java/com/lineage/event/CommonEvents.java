@@ -55,7 +55,12 @@ public final class CommonEvents {
     /** Fires on login and on /reload: push definitions + state to the client. */
     @SubscribeEvent
     public static void onDatapackSync(OnDatapackSyncEvent event) {
-        event.getRelevantPlayers().forEach(CommonEvents::fullSync);
+        ServerPlayer player = event.getPlayer();
+        if (player != null) {
+            fullSync(player);
+        } else {
+            event.getPlayerList().getPlayers().forEach(CommonEvents::fullSync);
+        }
     }
 
     @SubscribeEvent
