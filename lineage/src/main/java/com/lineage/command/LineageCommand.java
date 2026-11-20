@@ -29,19 +29,35 @@ public final class LineageCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("lineage")
-                .requires(s -> s.hasPermission(2))
+                .then(Commands.literal("list").executes(LineageCommand::list))
                 .then(Commands.literal("set")
+                        .requires(s -> s.hasPermission(2))
                         .then(Commands.argument("targets", EntityArgument.players())
                                 .then(Commands.argument("origin", ResourceLocationArgument.id())
                                         .suggests((ctx, b) -> SharedSuggestionProvider.suggestResource(OriginManager.ids(), b))
                                         .executes(LineageCommand::set))))
                 .then(Commands.literal("reset")
+                        .requires(s -> s.hasPermission(2))
                         .then(Commands.argument("targets", EntityArgument.players())
                                 .executes(LineageCommand::reset)))
                 .then(Commands.literal("points")
+                        .requires(s -> s.hasPermission(2))
                         .then(Commands.argument("targets", EntityArgument.players())
                                 .then(Commands.argument("amount", IntegerArgumentType.integer())
                                         .executes(LineageCommand::points)))));
+    }
+
+    private static int list(CommandContext<CommandSourceStack> c) {
+        StringBuilder message = new StringBuilder("Available Lineage origins:");
+        int count = 0;
+        for (ResourceLocation id : OriginManager.ids()) {
+            message.append(" ").append(id);
+            count++;
+        }
+        if (count == 0) message.append(" none (check datapacks, then run /reload)");
+        String result = message.toString();
+        c.getSource().sendSuccess(() -> Component.literal(result), false);
+        return count;
     }
 
     private static int set(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {

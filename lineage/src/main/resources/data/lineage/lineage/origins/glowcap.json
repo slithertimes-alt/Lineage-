@@ -1,0 +1,54 @@
+{
+  "name": "Glowcap",
+  "description": "A wandering cave fungus that lights the dark and releases dazzling spores.",
+  "icon": "minecraft:glow_berries",
+  "impact": 1,
+  "xp_per_point": 100,
+  "xp_sources": [
+    { "type": "tick", "condition": "underground", "amount": 1 },
+    { "type": "kill", "entity": "minecraft:spider", "amount": 5 }
+  ],
+  "abilities": [
+    {
+      "id": "cave_glow", "type": "effect", "name": "Cave Glow",
+      "description": "See clearly while underground.",
+      "icon": "minecraft:glow_berries",
+      "effect": "minecraft:night_vision", "condition": "underground"
+    },
+    {
+      "id": "glimmer_spores", "type": "active_effect", "name": "Glimmer Spores",
+      "description": "Make nearby creatures glow for a short time.",
+      "icon": "minecraft:glow_ink_sac",
+      "effect": "minecraft:glowing", "target": "nearby", "radius": 8,
+      "duration": 100, "cooldown": 10, "hunger_cost": 1
+    }
+  ],
+  "evolutions": [
+    {
+      "id": "thick_mycelium", "name": "Thick Mycelium",
+      "description": "Grow a tougher fungal shell.",
+      "icon": "minecraft:brown_mushroom_block", "cost": 1,
+      "abilities": [
+        {
+          "id": "mycelium_armor", "type": "attribute", "name": "Mycelium Armor",
+          "description": "+2 armor.", "icon": "minecraft:brown_mushroom_block",
+          "attribute": "minecraft:generic.armor", "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "spore_burst", "name": "Spore Burst",
+      "description": "Release a cloud that slows nearby creatures.",
+      "icon": "minecraft:red_mushroom", "cost": 2,
+      "requires": ["thick_mycelium"],
+      "abilities": [
+        {
+          "id": "spore_slow", "type": "active_effect", "name": "Spore Burst",
+          "description": "Slow nearby creatures.", "icon": "minecraft:red_mushroom",
+          "effect": "minecraft:slowness", "amplifier": 1, "target": "nearby",
+          "radius": 6, "duration": 100, "cooldown": 12, "hunger_cost": 1
+        }
+      ]
+    }
+  ]
+}

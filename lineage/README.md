@@ -17,18 +17,25 @@ Everything about origins, abilities and evolutions is **JSON** — no Java neede
 | `Z` `X` `C` | Use active ability 1 / 2 / 3 (rebindable) |
 | `V` | Open the Evolution tree |
 
+Keybinds only work in the world when no menu or chat screen is open. Rebind them in
+**Options → Controls → Key Binds → Lineage**. The first active ability is on `Z` by default;
+passive abilities do not use a key.
+
 First join opens the origin selection screen. Earn XP through each origin's own goals; every
 `xp_per_point` XP gives an **evolution point** to spend in the tree. Some branches are
 **mutually exclusive** (`excludes`) — choose your path.
 
-Admin commands (op level 2): `/lineage set <players> <origin>`, `/lineage reset <players>`,
+`/lineage list` shows the loaded origins. Admin commands (op level 2):
+`/lineage set <players> <origin>`, `/lineage reset <players>`,
 `/lineage points <players> <amount>`. Config: `config/lineage-common.toml` (`xpMultiplier`).
 
 ## Adding an origin (no code)
 
 Create `data/<namespace>/lineage/origins/<name>.json` in a datapack, or in
-`src/main/resources/`. `/reload` picks up changes live. Errors are logged with the file name.
-Use `merling.json` as a template.
+`src/main/resources/`. For a world datapack, put it under
+`saves/<world>/datapacks/<pack>/data/<namespace>/lineage/origins/<name>.json`.
+Run `/reload` to pick up changes live. Errors are logged with the file name. Use
+`merling.json` as a template. The built-in test origin is `lineage:glowcap`.
 
 ```jsonc
 {

@@ -96,6 +96,8 @@ public final class AbilityManager {
         }
         if (!a.activate(p)) return;
 
+        p.displayClientMessage(Component.literal("\u00a7a" + a.name + " used."), true);
+
         if (a.hungerCost > 0) p.getFoodData().addExhaustion(a.hungerCost * 4f);
         if (a.cooldownTicks > 0) d.setCooldown(a.id, now + a.cooldownTicks);
         if (a.sound != null) {
