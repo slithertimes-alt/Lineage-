@@ -55,10 +55,10 @@ public class EvolutionScreen extends Screen {
         panelW = width - 24;
         panelH = height - 20;
         int bodyY = panelY + 58;
-        int bodyH = panelH - 88;
+        int bodyH = Math.max(120, panelH - 116);
         listX = panelX + 12;
         listY = bodyY;
-        listW = Math.max(205, (panelW - 36) * 38 / 100);
+        listW = Math.max(125, Math.min((panelW - 36) * 38 / 100, (panelW - 40) * 45 / 100));
         listH = bodyH;
         detailX = listX + listW + 10;
         detailY = bodyY;
@@ -67,9 +67,9 @@ public class EvolutionScreen extends Screen {
         claimH = 25;
         claimX = detailX + 10;
         claimW = detailW - 20;
-        claimY = panelY + panelH - 44;
-        detailAreaTop = detailY + 100;
-        detailAreaBottom = claimY - 8;
+        claimY = panelY + panelH - 52;
+        detailAreaTop = detailY + 78;
+        detailAreaBottom = detailY + detailH - 5;
     }
 
     private EvolutionNode selected() {
@@ -226,7 +226,7 @@ public class EvolutionScreen extends Screen {
             String check = complete ? "✓" : "○";
             g.drawString(font, check, detailX + 16, rowY + 8, complete ? GREEN : MUTED, true);
             int textX = detailX + 34;
-            int textMax = detailW - 112;
+            int textMax = Math.max(40, detailW - 112);
             String description = truncate(quest.description, textMax);
             g.drawString(font, description, textX, rowY + 5, 0xFFE7EDF5, false);
             int value = Evolution.questProgress(node, quest, data);

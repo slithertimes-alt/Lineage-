@@ -27,7 +27,13 @@ same screen. Nodes can require kills, carrying items, visiting dimensions, or sp
 under a condition. Some branches are **mutually exclusive** (`excludes`) — choose your path.
 
 `/lineage list` shows loaded origins. Admin commands (op level 2):
-`/lineage set <players> <origin>` and `/lineage reset <players>`.
+`/lineage set <players> <origin>` and `/lineage reset <players>`. For testing, use
+`/lineage complete <players> <node>` to finish its checklist while keeping the claim step,
+or `/lineage unlock <players> <node>` to skip directly to an evolution and grant its abilities.
+Both commands suggest node IDs; the node must belong to each target's current origin.
+
+Origins show a subtle particle trail around the player's body, with an extra accent after
+the first evolution. The particle style follows the origin (fire, bubbles, cloud, or spores).
 
 ## Adding an origin (no code)
 
