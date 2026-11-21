@@ -47,6 +47,12 @@ horns and jagged wings, and active key slots support up to eight abilities. The 
 icons are replaced by a compact bar with exact current and maximum HP, keeping large health pools
 readable.
 
+Quickstep's visual effects use the animated player model: tapered horns follow the head and
+branching wings flap from the torso, including while crouching, swimming and flying. Blue arcs
+flicker along the limbs with a bright core and a soft outer glow; blue motes trail movement.
+These cosmetics currently render for your own player (view them in third person). Other players'
+Lineage cosmetics are not synchronized yet. Invisible and spectator players do not emit them.
+
 ```jsonc
 {
   "name": "Display name", "description": "...", "icon": "minecraft:feather",
