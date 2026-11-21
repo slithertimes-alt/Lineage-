@@ -33,30 +33,31 @@ public final class LineageCommand {
     private LineageCommand() {}
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("lineage")
-                .then(Commands.literal("list").executes(LineageCommand::list))
-                .then(Commands.literal("set")
-                        .requires(s -> s.hasPermission(2))
-                        .then(Commands.argument("targets", EntityArgument.players())
-                                .then(Commands.argument("origin", ResourceLocationArgument.id())
-                                        .suggests((ctx, b) -> SharedSuggestionProvider.suggestResource(OriginManager.ids(), b))
-                                        .executes(LineageCommand::set))))
-                .then(Commands.literal("reset")
-                        .requires(s -> s.hasPermission(2))
-                        .then(Commands.argument("targets", EntityArgument.players())
-                                .executes(LineageCommand::reset)))
-                .then(Commands.literal("complete")
-                        .requires(s -> s.hasPermission(2))
-                        .then(Commands.argument("targets", EntityArgument.players())
-                                .then(Commands.argument("node", StringArgumentType.word())
-                                        .suggests((ctx, b) -> SharedSuggestionProvider.suggest(nodeIds(), b))
-                                        .executes(LineageCommand::completeQuests))))
-                .then(Commands.literal("unlock")
-                        .requires(s -> s.hasPermission(2))
-                        .then(Commands.argument("targets", EntityArgument.players())
-                                .then(Commands.argument("node", StringArgumentType.word())
-                                        .suggests((ctx, b) -> SharedSuggestionProvider.suggest(nodeIds(), b))
-                                        .executes(LineageCommand::unlock))));
+        var root = Commands.literal("lineage");
+        root.then(Commands.literal("list").executes(LineageCommand::list));
+        root.then(Commands.literal("set")
+                .requires(s -> s.hasPermission(2))
+                .then(Commands.argument("targets", EntityArgument.players())
+                        .then(Commands.argument("origin", ResourceLocationArgument.id())
+                                .suggests((ctx, b) -> SharedSuggestionProvider.suggestResource(OriginManager.ids(), b))
+                                .executes(LineageCommand::set))));
+        root.then(Commands.literal("reset")
+                .requires(s -> s.hasPermission(2))
+                .then(Commands.argument("targets", EntityArgument.players())
+                        .executes(LineageCommand::reset)));
+        root.then(Commands.literal("complete")
+                .requires(s -> s.hasPermission(2))
+                .then(Commands.argument("targets", EntityArgument.players())
+                        .then(Commands.argument("node", StringArgumentType.word())
+                                .suggests((ctx, b) -> SharedSuggestionProvider.suggest(nodeIds(), b))
+                                .executes(LineageCommand::completeQuests))));
+        root.then(Commands.literal("unlock")
+                .requires(s -> s.hasPermission(2))
+                .then(Commands.argument("targets", EntityArgument.players())
+                        .then(Commands.argument("node", StringArgumentType.word())
+                                .suggests((ctx, b) -> SharedSuggestionProvider.suggest(nodeIds(), b))
+                                .executes(LineageCommand::unlock))));
+        dispatcher.register(root);
     }
 
     private static int list(CommandContext<CommandSourceStack> c) {
