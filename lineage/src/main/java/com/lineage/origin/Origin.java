@@ -18,17 +18,12 @@ import java.util.List;
 import java.util.Set;
 
 public record Origin(ResourceLocation id, String name, String description, ResourceLocation icon, int impact,
-                     int xpPerPoint, List<Ability> abilities, List<XpSource> xpSources,
-                     List<EvolutionNode> nodes) {
+                     List<Ability> abilities, List<EvolutionNode> nodes) {
 
     public static Origin fromJson(ResourceLocation id, JsonObject json) {
         List<Ability> abilities = new ArrayList<>();
         for (JsonElement e : GsonHelper.getAsJsonArray(json, "abilities", new JsonArray())) {
             abilities.add(Abilities.parse(GsonHelper.convertToJsonObject(e, "ability")));
-        }
-        List<XpSource> sources = new ArrayList<>();
-        for (JsonElement e : GsonHelper.getAsJsonArray(json, "xp_sources", new JsonArray())) {
-            sources.add(new XpSource(GsonHelper.convertToJsonObject(e, "xp_source")));
         }
         List<EvolutionNode> nodes = new ArrayList<>();
         Set<String> ids = new HashSet<>();
@@ -46,8 +41,7 @@ public record Origin(ResourceLocation id, String name, String description, Resou
                 GsonHelper.getAsString(json, "description", ""),
                 new ResourceLocation(GsonHelper.getAsString(json, "icon", "minecraft:paper")),
                 Mth.clamp(GsonHelper.getAsInt(json, "impact", 1), 1, 3),
-                Math.max(1, GsonHelper.getAsInt(json, "xp_per_point", 100)),
-                abilities, sources, nodes);
+                abilities, nodes);
     }
 
     public EvolutionNode node(String nodeId) {

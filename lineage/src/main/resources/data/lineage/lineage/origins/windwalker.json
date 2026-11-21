@@ -3,12 +3,6 @@
   "description": "Light as a feather and twice as quick, but built more like a bird than a bear.",
   "icon": "minecraft:feather",
   "impact": 1,
-  "xp_per_point": 100,
-  "xp_sources": [
-    { "type": "tick", "condition": "sprinting", "amount": 1 },
-    { "type": "kill", "entity": "minecraft:phantom", "amount": 20 },
-    { "type": "kill", "entity": "any", "amount": 1 }
-  ],
   "abilities": [
     {
       "id": "swift", "type": "attribute", "name": "Swift",
@@ -40,7 +34,13 @@
     {
       "id": "featherfall", "name": "Featherfall",
       "description": "Hold sneak in the air to drift gently down.",
-      "icon": "minecraft:feather", "cost": 1,
+      "icon": "minecraft:feather",
+      "quests": [
+        { "id": "phantoms", "type": "kill", "entity": "minecraft:phantom", "amount": 8,
+          "description": "Defeat 8 Phantoms" },
+        { "id": "air_time", "type": "condition_time", "condition": "airborne", "seconds": 180,
+          "description": "Spend 3 minutes airborne" }
+      ],
       "abilities": [
         { "id": "featherfall_effect", "type": "effect", "name": "Featherfall",
           "description": "Slow falling while sneaking in the air.",
@@ -50,7 +50,13 @@
     {
       "id": "second_wind", "name": "Second Wind",
       "description": "Your bones fill in a little.",
-      "icon": "minecraft:golden_apple", "cost": 1, "requires": ["featherfall"],
+      "icon": "minecraft:golden_apple", "requires": ["featherfall"],
+      "quests": [
+        { "id": "phantom_membranes", "type": "hold_item", "item": "minecraft:phantom_membrane", "amount": 12,
+          "description": "Carry 12 phantom membranes" },
+        { "id": "night_flight", "type": "condition_time", "condition": "night", "seconds": 600,
+          "description": "Spend 10 minutes awake at night" }
+      ],
       "abilities": [
         { "id": "second_wind_hp", "type": "attribute", "name": "Second Wind", "description": "+2 hearts.",
           "icon": "minecraft:golden_apple", "attribute": "minecraft:generic.max_health", "amount": 4 }
@@ -59,8 +65,14 @@
     {
       "id": "gale_leap", "name": "Gale Leap",
       "description": "Launch skyward. Choose this OR Wind Wall.",
-      "icon": "minecraft:rabbit_foot", "cost": 2,
+      "icon": "minecraft:rabbit_foot",
       "requires": ["featherfall"], "excludes": ["wind_wall"],
+      "quests": [
+        { "id": "enter_end", "type": "visit_dimension", "dimension": "minecraft:the_end",
+          "description": "Travel to the End" },
+        { "id": "dragon", "type": "kill", "entity": "minecraft:ender_dragon", "amount": 1,
+          "description": "Defeat the Ender Dragon" }
+      ],
       "abilities": [
         { "id": "gale_leap_ability", "type": "dash", "name": "Gale Leap",
           "description": "A huge leap upward and forward.",
@@ -71,8 +83,14 @@
     {
       "id": "wind_wall", "name": "Wind Wall",
       "description": "Smother your enemies in a cushion of air. Choose this OR Gale Leap.",
-      "icon": "minecraft:white_banner", "cost": 2,
+      "icon": "minecraft:white_banner",
       "requires": ["featherfall"], "excludes": ["gale_leap"],
+      "quests": [
+        { "id": "phantom_hunt", "type": "kill", "entity": "minecraft:phantom", "amount": 15,
+          "description": "Defeat 15 Phantoms" },
+        { "id": "membranes", "type": "hold_item", "item": "minecraft:phantom_membrane", "amount": 16,
+          "description": "Carry 16 phantom membranes" }
+      ],
       "abilities": [
         { "id": "wind_wall_ability", "type": "active_effect", "name": "Wind Wall",
           "description": "Heavily slow every enemy within 5 blocks.",

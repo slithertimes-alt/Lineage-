@@ -75,7 +75,10 @@ public final class CommonEvents {
 
     @SubscribeEvent
     public static void onDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
-        if (event.getEntity() instanceof ServerPlayer p) fullSync(p);
+        if (event.getEntity() instanceof ServerPlayer p) {
+            Evolution.onDimensionChange(p, event.getTo().location());
+            fullSync(p);
+        }
     }
 
     private static void fullSync(ServerPlayer p) {

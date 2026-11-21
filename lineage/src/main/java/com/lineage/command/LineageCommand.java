@@ -5,7 +5,6 @@ import com.lineage.data.LineageData;
 import com.lineage.network.Network;
 import com.lineage.origin.OriginManager;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
@@ -21,8 +20,7 @@ import java.util.Collection;
 
 /**
  * /lineage set <players> <origin>
- * /lineage reset <players>          (re-opens the selection screen)
- * /lineage points <players> <n>     (grant evolution points)
+ * /lineage reset <players>          (clears the origin and progress)
  */
 public final class LineageCommand {
     private LineageCommand() {}
@@ -39,12 +37,7 @@ public final class LineageCommand {
                 .then(Commands.literal("reset")
                         .requires(s -> s.hasPermission(2))
                         .then(Commands.argument("targets", EntityArgument.players())
-                                .executes(LineageCommand::reset)))
-                .then(Commands.literal("points")
-                        .requires(s -> s.hasPermission(2))
-                        .then(Commands.argument("targets", EntityArgument.players())
-                                .then(Commands.argument("amount", IntegerArgumentType.integer())
-                                        .executes(LineageCommand::points)))));
+                                .executes(LineageCommand::reset))));
     }
 
     private static int list(CommandContext<CommandSourceStack> c) {
@@ -83,14 +76,4 @@ public final class LineageCommand {
         return targets.size();
     }
 
-    private static int points(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
-        Collection<ServerPlayer> targets = EntityArgument.getPlayers(c, "targets");
-        int amount = IntegerArgumentType.getInteger(c, "amount");
-        for (ServerPlayer p : targets) {
-            LineageData.get(p).addPoints(amount);
-            Network.sendData(p);
-        }
-        c.getSource().sendSuccess(() -> Component.literal("Gave " + amount + " evolution point(s) to " + targets.size() + " player(s)"), true);
-        return targets.size();
-    }
 }

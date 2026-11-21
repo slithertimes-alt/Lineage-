@@ -12,16 +12,18 @@ import net.minecraftforge.common.capabilities.CapabilityToken;
 
 import java.util.*;
 
-/** Per-player Lineage state: chosen origin, evolution XP/points, unlocked nodes, cooldowns. */
+/** Per-player Lineage state: chosen origin, quest counters, unlocked nodes, and cooldowns. */
 public class LineageData {
     public static final Capability<LineageData> CAP = CapabilityManager.get(new CapabilityToken<>() {});
 
     private ResourceLocation origin;
+    // Legacy fields remain in player saves for compatibility; quests now gate evolutions.
     private int xp;
     private int points;
     private final Set<String> unlocked = new LinkedHashSet<>();
     private final Map<String, Long> cooldowns = new HashMap<>();
-    /** Server-side: true when XP changed and a client sync is pending. */
+    private final Map<String, Integer> questProgress = new HashMap<>();
+    /** Server-side: true when quest progress changed and a client sync is pending. */
     public boolean dirty;
 
     public static LineageData get(Player p) {
@@ -30,10 +32,6 @@ public class LineageData {
 
     public ResourceLocation getOrigin() { return origin; }
     public void setOrigin(ResourceLocation id) { this.origin = id; }
-    public int getXp() { return xp; }
-    public int getPoints() { return points; }
-    public void addPoints(int n) { points = Math.max(0, points + n); }
-    public void spendPoints(int n) { points = Math.max(0, points - n); }
     public boolean hasNode(String id) { return unlocked.contains(id); }
     public void unlock(String id) { unlocked.add(id); }
     public Set<String> unlockedIds() { return Collections.unmodifiableSet(unlocked); }
@@ -41,16 +39,15 @@ public class LineageData {
     public long cooldownEnd(String abilityId) { return cooldowns.getOrDefault(abilityId, 0L); }
     public void setCooldown(String abilityId, long endTick) { cooldowns.put(abilityId, endTick); }
 
-    /** Adds XP and returns how many evolution points were gained. */
-    public int addXp(int amount, int xpPerPoint) {
-        xp += amount;
-        int gained = 0;
-        while (xp >= xpPerPoint) {
-            xp -= xpPerPoint;
-            points++;
-            gained++;
-        }
-        return gained;
+    public int questProgress(String key) { return questProgress.getOrDefault(key, 0); }
+    public boolean setQuestProgress(String key, int value) {
+        int progress = Math.max(0, value);
+        if (questProgress(key) == progress) return false;
+        questProgress.put(key, progress);
+        return true;
+    }
+    public void addQuestProgress(String key, int amount, int maximum) {
+        setQuestProgress(key, Math.min(maximum, questProgress(key) + amount));
     }
 
     public void reset() {
@@ -59,6 +56,7 @@ public class LineageData {
         points = 0;
         unlocked.clear();
         cooldowns.clear();
+        questProgress.clear();
     }
 
     public CompoundTag save() {
@@ -72,6 +70,9 @@ public class LineageData {
         CompoundTag cds = new CompoundTag();
         cooldowns.forEach(cds::putLong);
         t.put("cooldowns", cds);
+        CompoundTag quests = new CompoundTag();
+        questProgress.forEach(quests::putInt);
+        t.put("questProgress", quests);
         return t;
     }
 
@@ -85,6 +86,8 @@ public class LineageData {
         for (int i = 0; i < list.size(); i++) unlocked.add(list.getString(i));
         CompoundTag cds = t.getCompound("cooldowns");
         for (String k : cds.getAllKeys()) cooldowns.put(k, cds.getLong(k));
+        CompoundTag quests = t.getCompound("questProgress");
+        for (String k : quests.getAllKeys()) questProgress.put(k, quests.getInt(k));
     }
 
     public void copyFrom(LineageData other) {

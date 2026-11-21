@@ -3,11 +3,6 @@
   "description": "A wandering cave fungus that lights the dark and releases dazzling spores.",
   "icon": "minecraft:glow_berries",
   "impact": 1,
-  "xp_per_point": 100,
-  "xp_sources": [
-    { "type": "tick", "condition": "underground", "amount": 1 },
-    { "type": "kill", "entity": "minecraft:spider", "amount": 5 }
-  ],
   "abilities": [
     {
       "id": "cave_glow", "type": "effect", "name": "Cave Glow",
@@ -27,7 +22,13 @@
     {
       "id": "thick_mycelium", "name": "Thick Mycelium",
       "description": "Grow a tougher fungal shell.",
-      "icon": "minecraft:brown_mushroom_block", "cost": 1,
+      "icon": "minecraft:brown_mushroom_block",
+      "quests": [
+        { "id": "mushrooms", "type": "hold_item", "item": "minecraft:brown_mushroom", "amount": 24,
+          "description": "Carry 24 brown mushrooms" },
+        { "id": "cave_time", "type": "condition_time", "condition": "underground", "seconds": 600,
+          "description": "Spend 10 minutes underground" }
+      ],
       "abilities": [
         {
           "id": "mycelium_armor", "type": "attribute", "name": "Mycelium Armor",
@@ -39,8 +40,14 @@
     {
       "id": "spore_burst", "name": "Spore Burst",
       "description": "Release a cloud that slows nearby creatures.",
-      "icon": "minecraft:red_mushroom", "cost": 2,
+      "icon": "minecraft:red_mushroom",
       "requires": ["thick_mycelium"],
+      "quests": [
+        { "id": "cave_spiders", "type": "kill", "entity": "minecraft:cave_spider", "amount": 12,
+          "description": "Defeat 12 Cave Spiders" },
+        { "id": "glow_berries", "type": "hold_item", "item": "minecraft:glow_berries", "amount": 16,
+          "description": "Carry 16 glow berries" }
+      ],
       "abilities": [
         {
           "id": "spore_slow", "type": "active_effect", "name": "Spore Burst",

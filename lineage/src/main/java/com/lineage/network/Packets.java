@@ -133,7 +133,6 @@ public final class Packets {
                 if (o != null) {
                     EvolutionNode n = o.node(nodeId);
                     if (n != null && Evolution.canUnlock(o, n, d)) {
-                        d.spendPoints(n.cost());
                         d.unlock(n.id());
                         AbilityManager.refresh(p);
                         p.displayClientMessage(Component.literal("\u00a7aEvolved: \u00a7f" + n.name()), true);

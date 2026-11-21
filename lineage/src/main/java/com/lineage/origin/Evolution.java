@@ -1,80 +1,117 @@
 package com.lineage.origin;
 
-import com.lineage.Config;
 import com.lineage.ability.Conditions;
 import com.lineage.data.LineageData;
-import com.lineage.network.Network;
-import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.Item;
 
-/** Evolution rules (shared by client for UI state) and server-side XP awarding. */
+/** Quest rules shared with the evolution UI, plus server-side objective tracking. */
 public final class Evolution {
     private Evolution() {}
 
     /** True if another unlocked node excludes this one, or this node excludes an unlocked one. */
-    public static boolean isBlocked(Origin o, EvolutionNode n, LineageData d) {
-        for (String x : n.excludes()) if (d.hasNode(x)) return true;
-        for (String id : d.unlockedIds()) {
-            EvolutionNode u = o.node(id);
-            if (u != null && u.excludes().contains(n.id())) return true;
+    public static boolean isBlocked(Origin origin, EvolutionNode node, LineageData data) {
+        for (String excluded : node.excludes()) if (data.hasNode(excluded)) return true;
+        for (String id : data.unlockedIds()) {
+            EvolutionNode unlocked = origin.node(id);
+            if (unlocked != null && unlocked.excludes().contains(node.id())) return true;
         }
         return false;
     }
 
-    public static boolean requirementsMet(EvolutionNode n, LineageData d) {
-        for (String r : n.requires()) if (!d.hasNode(r)) return false;
+    public static boolean prerequisitesMet(EvolutionNode node, LineageData data) {
+        for (String required : node.requires()) if (!data.hasNode(required)) return false;
         return true;
     }
 
-    public static boolean canUnlock(Origin o, EvolutionNode n, LineageData d) {
-        return !d.hasNode(n.id()) && requirementsMet(n, d) && !isBlocked(o, n, d) && d.getPoints() >= n.cost();
+    public static String questKey(EvolutionNode node, EvolutionQuest quest) {
+        return node.id() + "/" + quest.id;
     }
 
-    // ---------------- server side ----------------
-
-    private static Origin current(ServerPlayer p) {
-        return OriginManager.get(LineageData.get(p).getOrigin());
+    public static int questProgress(EvolutionNode node, EvolutionQuest quest, LineageData data) {
+        return Math.min(quest.amount, data.questProgress(questKey(node, quest)));
     }
 
-    public static void onKill(ServerPlayer p, LivingEntity victim) {
-        Origin o = current(p);
-        if (o == null) return;
-        int total = 0;
-        for (XpSource s : o.xpSources()) {
-            if (s.type.equals("kill") && s.matchesKill(victim) && Conditions.test(s.condition, p)) total += s.amount;
+    public static int completedQuestCount(EvolutionNode node, LineageData data) {
+        int completed = 0;
+        for (EvolutionQuest quest : node.quests()) {
+            if (questProgress(node, quest, data) >= quest.amount) completed++;
         }
-        if (total > 0) addXp(p, total);
+        return completed;
     }
 
-    /** Called once per second. */
-    public static void tickSources(ServerPlayer p) {
-        Origin o = current(p);
-        if (o == null) return;
-        int total = 0;
-        for (XpSource s : o.xpSources()) {
-            if (s.type.equals("tick") && Conditions.test(s.condition, p)) total += s.amount;
-        }
-        if (total > 0) addXp(p, total);
+    public static boolean questsComplete(EvolutionNode node, LineageData data) {
+        return completedQuestCount(node, data) == node.quests().size();
     }
 
-    public static void addXp(ServerPlayer p, int amount) {
-        LineageData d = LineageData.get(p);
-        Origin o = OriginManager.get(d.getOrigin());
-        if (o == null) return;
-        // Stochastic rounding so small multipliers still work over time.
-        double scaled = amount * Config.XP_MULTIPLIER.get();
-        int whole = (int) scaled;
-        int amt = whole + (p.getRandom().nextDouble() < scaled - whole ? 1 : 0);
-        if (amt <= 0) return;
-        int gained = d.addXp(amt, o.xpPerPoint());
-        d.dirty = true;
-        if (gained > 0) {
-            p.displayClientMessage(Component.literal("\u00a76Evolution point earned! Open your Evolutions menu."), true);
-            p.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.8f, 1.2f);
-            Network.sendData(p);
+    public static boolean canUnlock(Origin origin, EvolutionNode node, LineageData data) {
+        return !data.hasNode(node.id()) && prerequisitesMet(node, data)
+                && !isBlocked(origin, node, data) && questsComplete(node, data);
+    }
+
+    private static Origin current(ServerPlayer player) {
+        return OriginManager.get(LineageData.get(player).getOrigin());
+    }
+
+    /** Called when the player kills a living entity. */
+    public static void onKill(ServerPlayer player, LivingEntity victim) {
+        Origin origin = current(player);
+        if (origin == null) return;
+        LineageData data = LineageData.get(player);
+        boolean changed = false;
+        for (EvolutionNode node : origin.nodes()) {
+            if (data.hasNode(node.id())) continue;
+            for (EvolutionQuest quest : node.quests()) {
+                if (quest.matchesKill(victim)) {
+                    String key = questKey(node, quest);
+                    int before = data.questProgress(key);
+                    data.addQuestProgress(key, 1, quest.amount);
+                    changed |= data.questProgress(key) != before;
+                }
+            }
         }
+        if (changed) data.dirty = true;
+    }
+
+    /** Called once per second; updates timed goals and held-item goals. */
+    public static void tickSources(ServerPlayer player) {
+        Origin origin = current(player);
+        if (origin == null) return;
+        LineageData data = LineageData.get(player);
+        boolean changed = false;
+        for (EvolutionNode node : origin.nodes()) {
+            if (data.hasNode(node.id())) continue;
+            for (EvolutionQuest quest : node.quests()) {
+                String key = questKey(node, quest);
+                int next = data.questProgress(key);
+                if (quest.type.equals("condition_time") && Conditions.test(quest.condition, player)) {
+                    next = Math.min(quest.amount, next + 1);
+                } else if (quest.type.equals("hold_item")) {
+                    Item item = quest.item();
+                    next = item == null ? 0 : Math.min(quest.amount, player.getInventory().countItem(item));
+                }
+                changed |= data.setQuestProgress(key, next);
+            }
+        }
+        if (changed) data.dirty = true;
+    }
+
+    /** Called when a player enters a new dimension. */
+    public static void onDimensionChange(ServerPlayer player, ResourceLocation dimension) {
+        Origin origin = current(player);
+        if (origin == null) return;
+        LineageData data = LineageData.get(player);
+        boolean changed = false;
+        for (EvolutionNode node : origin.nodes()) {
+            if (data.hasNode(node.id())) continue;
+            for (EvolutionQuest quest : node.quests()) {
+                if (quest.matchesDimension(dimension)) {
+                    changed |= data.setQuestProgress(questKey(node, quest), quest.amount);
+                }
+            }
+        }
+        if (changed) data.dirty = true;
     }
 }

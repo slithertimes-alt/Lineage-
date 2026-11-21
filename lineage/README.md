@@ -21,13 +21,13 @@ Keybinds only work in the world when no menu or chat screen is open. Rebind them
 **Options → Controls → Key Binds → Lineage**. The first active ability is on `Z` by default;
 passive abilities do not use a key.
 
-First join opens the origin selection screen. Earn XP through each origin's own goals; every
-`xp_per_point` XP gives an **evolution point** to spend in the tree. Some branches are
-**mutually exclusive** (`excludes`) — choose your path.
+First join opens the origin selection screen. Open Evolutions with `V`, select a node, and
+work through its quest checklist. Complete every objective, then claim the evolution in the
+same screen. Nodes can require kills, carrying items, visiting dimensions, or spending time
+under a condition. Some branches are **mutually exclusive** (`excludes`) — choose your path.
 
-`/lineage list` shows the loaded origins. Admin commands (op level 2):
-`/lineage set <players> <origin>`, `/lineage reset <players>`,
-`/lineage points <players> <amount>`. Config: `config/lineage-common.toml` (`xpMultiplier`).
+`/lineage list` shows loaded origins. Admin commands (op level 2):
+`/lineage set <players> <origin>` and `/lineage reset <players>`.
 
 ## Adding an origin (no code)
 
@@ -41,25 +41,47 @@ Run `/reload` to pick up changes live. Errors are logged with the file name. Use
 {
   "name": "Display name", "description": "...", "icon": "minecraft:feather",
   "impact": 1,                // 1-3, shown in the picker
-  "xp_per_point": 100,
-  "xp_sources": [ ... ],      // how evolution XP is earned
   "abilities": [ ... ],       // what you start with
   "evolutions": [ ... ]       // the tree
 }
 ```
 
-### XP sources
+### Quest requirements
+
+Each evolution node can contain a `quests` checklist. Every quest must be complete before
+the node can be claimed. Quest progress is saved with the player and shown in the Evolution
+Journal.
+
 ```json
-{ "type": "kill", "entity": "minecraft:blaze" | "#minecraft:undead" | "any", "amount": 20 }
-{ "type": "tick", "condition": "in_water", "amount": 1 }      // once per second
+{
+  "id": "deep_hunter", "name": "Deep Hunter", "description": "Earn the title of the deep.",
+  "icon": "minecraft:trident", "requires": ["thick_scales"],
+  "quests": [
+    { "id": "drowned", "type": "kill", "entity": "minecraft:drowned", "amount": 12,
+      "description": "Defeat 12 Drowned" },
+    { "id": "pearls", "type": "hold_item", "item": "minecraft:ender_pearl", "amount": 8,
+      "description": "Carry 8 ender pearls" },
+    { "id": "nether", "type": "visit_dimension", "dimension": "minecraft:the_nether",
+      "description": "Travel to the Nether" },
+    { "id": "deep_time", "type": "condition_time", "condition": "in_water", "seconds": 600,
+      "description": "Spend 10 minutes underwater" }
+  ],
+  "abilities": [ ... ]
+}
 ```
+
+Quest types are `kill` (entity ID, entity tag such as `#minecraft:undead`, or `any`),
+`hold_item` (current inventory count), `visit_dimension`, and `condition_time` (seconds).
+Use a unique quest `id` within each node. The `description` is the text shown in the UI.
 
 ### Evolution nodes
 ```json
 { "id": "inferno", "name": "Inferno", "description": "...", "icon": "minecraft:ghast_tear",
-  "cost": 2, "requires": ["molten_core"], "excludes": ["magma_skin"], "abilities": [ ... ] }
+  "requires": ["molten_core"], "excludes": ["magma_skin"],
+  "quests": [ ... ], "abilities": [ ... ] }
 ```
-The tree layout is automatic (by depth in the `requires` chain).
+The journal lays nodes out in a selectable path list. `requires` connects the path; `quests`
+set the objectives for that specific evolution.
 
 ### Ability types
 Every ability has: `id` (unique), `type`, `name`, `description`, `icon` (item id).
@@ -96,13 +118,13 @@ Then use `"type": "heal"` from any JSON. Other mods can register types the same 
 
 ## Layout
 - `ability/` — ability base class, registry, conditions, `types/` built-ins
-- `origin/` — origin/evolution model, datapack loader, XP + evolution rules
-- `data/` — per-player capability (origin, XP, points, unlocked nodes, cooldowns)
+- `origin/` — origin/evolution model, datapack loader, quest tracking and unlock rules
+- `data/` — per-player capability (origin, quest progress, unlocked nodes, cooldowns)
 - `network/` — sync + action packets
-- `client/` — keybinds, HUD, origin picker, evolution tree screen
+- `client/` — keybinds, HUD, origin picker, evolution quest journal
 - `command/`, `event/` — `/lineage` command and Forge event wiring
 
 ## Known limitations / ideas
 - Fire immunity cancels the damage but the player still visually burns.
 - Only one origin at a time; changing origin needs `/lineage reset`. An "orb of reselection" item is an easy next step.
-- Ideas: more XP source types (block_break, craft, advancement), more ability types (teleport, summon, aura), resource pools (mana/stamina), per-origin shaders/skins, multiple origin layers.
+- Ideas: more quest types (block breaking, crafting, advancements), more ability types (teleport, summon, aura), resource pools (mana/stamina), per-origin shaders/skins, multiple origin layers.

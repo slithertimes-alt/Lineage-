@@ -3,14 +3,6 @@
   "description": "Forged in the Nether's heat. Fire cannot hurt you, but the cold bites deep.",
   "icon": "minecraft:blaze_rod",
   "impact": 3,
-  "xp_per_point": 120,
-  "xp_sources": [
-    { "type": "tick", "condition": "in_nether", "amount": 1 },
-    { "type": "tick", "condition": "in_lava", "amount": 3 },
-    { "type": "kill", "entity": "minecraft:blaze", "amount": 20 },
-    { "type": "kill", "entity": "minecraft:wither_skeleton", "amount": 20 },
-    { "type": "kill", "entity": "minecraft:ghast", "amount": 30 }
-  ],
   "abilities": [
     {
       "id": "fireproof", "type": "damage_modifier", "name": "Fireproof",
@@ -47,7 +39,13 @@
     {
       "id": "blaze_blood", "name": "Blaze Blood",
       "description": "Your strikes carry the Nether's fury.",
-      "icon": "minecraft:blaze_powder", "cost": 1,
+      "icon": "minecraft:blaze_powder",
+      "quests": [
+        { "id": "blazes", "type": "kill", "entity": "minecraft:blaze", "amount": 12,
+          "description": "Defeat 12 Blazes" },
+        { "id": "nether_time", "type": "condition_time", "condition": "in_nether", "seconds": 600,
+          "description": "Spend 10 minutes in the Nether" }
+      ],
       "abilities": [
         { "id": "blaze_strength", "type": "attribute", "name": "Blaze Blood", "description": "+2 attack damage.",
           "icon": "minecraft:blaze_powder", "attribute": "minecraft:generic.attack_damage", "amount": 2 }
@@ -56,7 +54,13 @@
     {
       "id": "molten_core", "name": "Molten Core",
       "description": "A furnace burns where your heart should be.",
-      "icon": "minecraft:magma_block", "cost": 1, "requires": ["blaze_blood"],
+      "icon": "minecraft:magma_block", "requires": ["blaze_blood"],
+      "quests": [
+        { "id": "wither_skeletons", "type": "kill", "entity": "minecraft:wither_skeleton", "amount": 8,
+          "description": "Defeat 8 Wither Skeletons" },
+        { "id": "magma_cream", "type": "hold_item", "item": "minecraft:magma_cream", "amount": 8,
+          "description": "Carry 8 magma cream" }
+      ],
       "abilities": [
         { "id": "core_health", "type": "attribute", "name": "Molten Core", "description": "+2 hearts.",
           "icon": "minecraft:magma_block", "attribute": "minecraft:generic.max_health", "amount": 4 }
@@ -65,8 +69,14 @@
     {
       "id": "inferno", "name": "Inferno",
       "description": "Unleash devastating explosive fire. Choose this OR Magma Skin.",
-      "icon": "minecraft:ghast_tear", "cost": 2,
+      "icon": "minecraft:ghast_tear",
       "requires": ["molten_core"], "excludes": ["magma_skin"],
+      "quests": [
+        { "id": "ghasts", "type": "kill", "entity": "minecraft:ghast", "amount": 3,
+          "description": "Defeat 3 Ghasts" },
+        { "id": "blaze_rods", "type": "hold_item", "item": "minecraft:blaze_rod", "amount": 16,
+          "description": "Carry 16 blaze rods" }
+      ],
       "abilities": [
         { "id": "inferno_orb", "type": "fireball", "name": "Inferno Orb",
           "description": "Launch a huge explosive fireball.",
@@ -77,8 +87,14 @@
     {
       "id": "magma_skin", "name": "Magma Skin",
       "description": "Harden into living stone and erupt on command. Choose this OR Inferno.",
-      "icon": "minecraft:obsidian", "cost": 2,
+      "icon": "minecraft:obsidian",
       "requires": ["molten_core"], "excludes": ["inferno"],
+      "quests": [
+        { "id": "magma_cubes", "type": "kill", "entity": "minecraft:magma_cube", "amount": 20,
+          "description": "Defeat 20 Magma Cubes" },
+        { "id": "obsidian", "type": "hold_item", "item": "minecraft:obsidian", "amount": 16,
+          "description": "Carry 16 obsidian" }
+      ],
       "abilities": [
         { "id": "magma_armor", "type": "attribute", "name": "Magma Skin", "description": "+6 armor.",
           "icon": "minecraft:obsidian", "attribute": "minecraft:generic.armor", "amount": 6 },

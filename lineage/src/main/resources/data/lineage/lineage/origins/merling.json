@@ -3,12 +3,6 @@
   "description": "Born of the tides. You are at home beneath the waves, but the dry world and its flames are unkind to you.",
   "icon": "minecraft:heart_of_the_sea",
   "impact": 2,
-  "xp_per_point": 120,
-  "xp_sources": [
-    { "type": "tick", "condition": "in_water", "amount": 1 },
-    { "type": "kill", "entity": "minecraft:drowned", "amount": 10 },
-    { "type": "kill", "entity": "minecraft:guardian", "amount": 25 }
-  ],
   "abilities": [
     {
       "id": "gills", "type": "effect", "name": "Gills",
@@ -46,7 +40,13 @@
     {
       "id": "dolphins_grace", "name": "Dolphin's Grace",
       "description": "Glide through water at incredible speed.",
-      "icon": "minecraft:prismarine_shard", "cost": 1,
+      "icon": "minecraft:prismarine_shard",
+      "quests": [
+        { "id": "drowned", "type": "kill", "entity": "minecraft:drowned", "amount": 8,
+          "description": "Defeat 8 Drowned" },
+        { "id": "deep_time", "type": "condition_time", "condition": "in_water", "seconds": 600,
+          "description": "Spend 10 minutes underwater" }
+      ],
       "abilities": [
         { "id": "grace", "type": "effect", "name": "Dolphin's Grace", "description": "Dolphin's Grace while swimming.",
           "icon": "minecraft:prismarine_shard", "effect": "minecraft:dolphins_grace", "condition": "in_water" }
@@ -55,7 +55,13 @@
     {
       "id": "thick_scales", "name": "Thick Scales",
       "description": "Hardened scales give you extra armor.",
-      "icon": "minecraft:scute", "cost": 1, "requires": ["dolphins_grace"],
+      "icon": "minecraft:scute", "requires": ["dolphins_grace"],
+      "quests": [
+        { "id": "guardians", "type": "kill", "entity": "minecraft:guardian", "amount": 12,
+          "description": "Defeat 12 Guardians" },
+        { "id": "scutes", "type": "hold_item", "item": "minecraft:scute", "amount": 8,
+          "description": "Carry 8 scutes" }
+      ],
       "abilities": [
         { "id": "scales", "type": "attribute", "name": "Thick Scales", "description": "+4 armor.",
           "icon": "minecraft:scute", "attribute": "minecraft:generic.armor", "amount": 4 }
@@ -64,8 +70,14 @@
     {
       "id": "storm_caller", "name": "Storm Caller",
       "description": "Command the tides. Choose this OR the Abyssal Hunter path.",
-      "icon": "minecraft:trident", "cost": 2,
+      "icon": "minecraft:trident",
       "requires": ["thick_scales"], "excludes": ["abyssal_hunter"],
+      "quests": [
+        { "id": "elder_guardian", "type": "kill", "entity": "minecraft:elder_guardian", "amount": 1,
+          "description": "Defeat an Elder Guardian" },
+        { "id": "heart", "type": "hold_item", "item": "minecraft:heart_of_the_sea", "amount": 1,
+          "description": "Carry a Heart of the Sea" }
+      ],
       "abilities": [
         { "id": "stormborn", "type": "effect", "name": "Stormborn", "description": "Regenerate while standing in rain.",
           "icon": "minecraft:water_bucket", "effect": "minecraft:regeneration", "amplifier": 1, "condition": "in_rain" },
@@ -79,8 +91,14 @@
     {
       "id": "abyssal_hunter", "name": "Abyssal Hunter",
       "description": "Become an ambush predator. Choose this OR the Storm Caller path.",
-      "icon": "minecraft:nautilus_shell", "cost": 2,
+      "icon": "minecraft:nautilus_shell",
       "requires": ["thick_scales"], "excludes": ["storm_caller"],
+      "quests": [
+        { "id": "deep_guardians", "type": "kill", "entity": "minecraft:guardian", "amount": 20,
+          "description": "Defeat 20 Guardians" },
+        { "id": "deep_dive", "type": "condition_time", "condition": "in_water", "seconds": 1200,
+          "description": "Spend 20 minutes underwater" }
+      ],
       "abilities": [
         { "id": "predator", "type": "attribute", "name": "Predator", "description": "+3 attack damage.",
           "icon": "minecraft:iron_sword", "attribute": "minecraft:generic.attack_damage", "amount": 3 },

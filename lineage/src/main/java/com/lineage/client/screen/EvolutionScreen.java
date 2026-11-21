@@ -9,219 +9,355 @@ import com.lineage.network.Network;
 import com.lineage.network.Packets;
 import com.lineage.origin.Evolution;
 import com.lineage.origin.EvolutionNode;
+import com.lineage.origin.EvolutionQuest;
 import com.lineage.origin.Origin;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FormattedText;
-import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-/** Skill-tree style evolution screen. Auto-lays out nodes by depth; drag to pan; click a gold node to evolve. */
+/** Quest journal and evolution browser. */
 public class EvolutionScreen extends Screen {
-    private static final int BOX = 28, GX = 70, GY = 40;
-
-    private static final int C_UNLOCKED = 0xFF55FF55;
-    private static final int C_AVAILABLE = 0xFFFFD700;
-    private static final int C_NEED_POINTS = 0xFF997700;
-    private static final int C_LOCKED = 0xFF555566;
-    private static final int C_BLOCKED = 0xFFAA3333;
+    private static final int GOLD = 0xFFFFCF68;
+    private static final int AQUA = 0xFF62D8D0;
+    private static final int GREEN = 0xFF66D99A;
+    private static final int RED = 0xFFFF7777;
+    private static final int MUTED = 0xFF95A4B8;
+    private static final int PANEL = 0xF00D1420;
+    private static final int TILE = 0xFF151F2D;
+    private static final int ROW = 0xFF111A27;
 
     private final Origin origin;
-    private final Map<String, double[]> pos = new HashMap<>();
-    private int maxDepth = 1;
-    private double panX, panY;
+    private String selectedId;
+    private int listScroll;
+    private int detailScroll;
+
+    private int panelX, panelY, panelW, panelH;
+    private int listX, listY, listW, listH;
+    private int detailX, detailY, detailW, detailH;
+    private int detailAreaTop, detailAreaBottom, claimX, claimY, claimW, claimH;
     private EvolutionNode hovered;
 
     public EvolutionScreen() {
-        super(Component.literal("Evolutions"));
+        super(Component.literal("Evolution Journal"));
         this.origin = ClientState.origin();
-        layout();
-    }
-
-    private void layout() {
-        if (origin == null) return;
-        Map<String, Integer> depths = new HashMap<>();
-        for (EvolutionNode n : origin.nodes()) depth(n, depths);
-        Map<Integer, List<EvolutionNode>> byDepth = new TreeMap<>();
-        for (EvolutionNode n : origin.nodes()) byDepth.computeIfAbsent(depths.get(n.id()), k -> new ArrayList<>()).add(n);
-        for (Map.Entry<Integer, List<EvolutionNode>> e : byDepth.entrySet()) {
-            List<EvolutionNode> col = e.getValue();
-            for (int i = 0; i < col.size(); i++) {
-                pos.put(col.get(i).id(), new double[]{e.getKey() * GX, (i - (col.size() - 1) / 2.0) * GY});
-            }
-            maxDepth = Math.max(maxDepth, e.getKey());
-        }
-    }
-
-    private int depth(EvolutionNode n, Map<String, Integer> memo) {
-        Integer cached = memo.get(n.id());
-        if (cached != null) return cached;
-        memo.put(n.id(), 1); // cycle guard
-        int d = 1;
-        for (String r : n.requires()) {
-            EvolutionNode parent = origin.node(r);
-            if (parent != null) d = Math.max(d, depth(parent, memo) + 1);
-        }
-        memo.put(n.id(), d);
-        return d;
-    }
-
-    private int borderFor(EvolutionNode n, LineageData d) {
-        if (d.hasNode(n.id())) return C_UNLOCKED;
-        if (Evolution.isBlocked(origin, n, d)) return C_BLOCKED;
-        if (!Evolution.requirementsMet(n, d)) return C_LOCKED;
-        return d.getPoints() >= n.cost() ? C_AVAILABLE : C_NEED_POINTS;
+        if (origin != null && !origin.nodes().isEmpty()) selectedId = origin.nodes().get(0).id();
     }
 
     @Override
-    public void render(GuiGraphics g, int mx, int my, float pt) {
+    protected void init() {
+        panelX = 12;
+        panelY = 10;
+        panelW = width - 24;
+        panelH = height - 20;
+        int bodyY = panelY + 58;
+        int bodyH = panelH - 88;
+        listX = panelX + 12;
+        listY = bodyY;
+        listW = Math.max(205, (panelW - 36) * 38 / 100);
+        listH = bodyH;
+        detailX = listX + listW + 10;
+        detailY = bodyY;
+        detailW = panelX + panelW - 12 - detailX;
+        detailH = bodyH;
+        claimH = 25;
+        claimX = detailX + 10;
+        claimW = detailW - 20;
+        claimY = panelY + panelH - 44;
+        detailAreaTop = detailY + 100;
+        detailAreaBottom = claimY - 8;
+    }
+
+    private EvolutionNode selected() {
+        return origin == null || selectedId == null ? null : origin.node(selectedId);
+    }
+
+    private String status(EvolutionNode node, LineageData data) {
+        if (data.hasNode(node.id())) return "UNLOCKED";
+        if (Evolution.isBlocked(origin, node, data)) return "BRANCH LOCKED";
+        if (!Evolution.prerequisitesMet(node, data)) return "PATH LOCKED";
+        if (Evolution.questsComplete(node, data)) return "READY";
+        return "IN PROGRESS";
+    }
+
+    private int statusColor(EvolutionNode node, LineageData data) {
+        if (data.hasNode(node.id())) return GREEN;
+        if (Evolution.isBlocked(origin, node, data)) return RED;
+        if (!Evolution.prerequisitesMet(node, data)) return MUTED;
+        if (Evolution.questsComplete(node, data)) return GOLD;
+        return AQUA;
+    }
+
+    private int completedNodes(LineageData data) {
+        int done = 0;
+        if (origin != null) for (EvolutionNode node : origin.nodes()) if (data.hasNode(node.id())) done++;
+        return done;
+    }
+
+    @Override
+    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         renderBackground(g);
+        g.fill(0, 0, width, height, 0x9A050913);
+        UiUtil.panel(g, panelX, panelY, panelW, panelH, PANEL, 0xFF3A5369);
+
         if (origin == null) {
-            g.drawCenteredString(font, "You have no origin yet.", width / 2, height / 2, 0xFFFFFFFF);
-            super.render(g, mx, my, pt);
+            g.drawCenteredString(font, "Choose an origin to begin your evolution.", width / 2, height / 2 - 4, 0xFFFFFFFF);
+            g.drawCenteredString(font, "Press Escape to return", width / 2, height / 2 + 14, MUTED);
+            super.render(g, mouseX, mouseY, partialTick);
             return;
         }
-        LineageData d = ClientState.DATA;
-        int baseX = (int) (width / 2.0 - maxDepth * GX / 2.0 + panX);
-        int baseY = (int) (height / 2.0 + 12 + panY);
+
+        renderHeader(g);
+        renderNodeList(g, mouseX, mouseY);
+        renderDetails(g, mouseX, mouseY);
+        renderFooter(g);
+        super.render(g, mouseX, mouseY, partialTick);
+        if (hovered != null) {
+            g.renderTooltip(font, Component.literal(hovered.description()), mouseX, mouseY);
+        }
+    }
+
+    private void renderHeader(GuiGraphics g) {
+        LineageData data = ClientState.DATA;
+        int iconY = panelY + 16;
+        g.renderItem(origin.iconStack(), panelX + 16, iconY);
+        g.drawString(font, origin.name(), panelX + 40, panelY + 13, GOLD, true);
+        g.drawString(font, "EVOLUTION JOURNAL", panelX + 40, panelY + 27, MUTED, false);
+
+        int done = completedNodes(data);
+        String progress = done + " / " + origin.nodes().size() + " EVOLVED";
+        int pw = font.width(progress);
+        int chipX = panelX + panelW - pw - 34;
+        UiUtil.panel(g, chipX, panelY + 14, pw + 22, 22, 0xFF142434, 0xFF31566A);
+        g.drawString(font, progress, chipX + 11, panelY + 21, AQUA, true);
+        g.fill(panelX + 12, panelY + 48, panelX + panelW - 12, panelY + 49, 0xFF2D3A4A);
+    }
+
+    private void renderNodeList(GuiGraphics g, int mouseX, int mouseY) {
+        UiUtil.panel(g, listX, listY, listW, listH, 0xC90A111B, 0xFF25394D);
+        g.drawString(font, "EVOLUTION PATH", listX + 10, listY + 8, 0xFFE6EDF5, true);
+        g.drawString(font, "Select a node to inspect its quests", listX + 10, listY + 21, MUTED, false);
+        int viewportTop = listY + 39;
+        int viewportBottom = listY + listH - 8;
         hovered = null;
+        g.enableScissor(listX + 3, viewportTop, listX + listW - 3, viewportBottom);
+        LineageData data = ClientState.DATA;
 
-        // ---- connections ----
-        for (EvolutionNode n : origin.nodes()) {
-            double[] p = pos.get(n.id());
-            int cx = baseX + (int) p[0], cy = baseY + (int) p[1];
-            if (n.requires().isEmpty()) {
-                connect(g, baseX, baseY, cx, cy, d.hasNode(n.id()));
-            } else {
-                for (String r : n.requires()) {
-                    double[] pp = pos.get(r);
-                    connect(g, baseX + (int) pp[0], baseY + (int) pp[1], cx, cy, d.hasNode(r) && d.hasNode(n.id()));
-                }
-            }
+        for (int i = 0; i < origin.nodes().size(); i++) {
+            EvolutionNode node = origin.nodes().get(i);
+            int cardY = viewportTop + i * 53 - listScroll;
+            if (cardY + 47 < viewportTop || cardY > viewportBottom) continue;
+            boolean selected = node.id().equals(selectedId);
+            boolean over = mouseX >= listX + 6 && mouseX < listX + listW - 6
+                    && mouseY >= cardY && mouseY < cardY + 47;
+            int accent = statusColor(node, data);
+            int fill = selected ? 0xFF1C2C3C : over ? 0xFF192637 : TILE;
+            UiUtil.panel(g, listX + 6, cardY, listW - 12, 47, fill, selected ? accent : 0xFF253343);
+            g.fill(listX + 7, cardY + 1, listX + 10, cardY + 46, accent);
+            g.renderItem(node.iconStack(), listX + 16, cardY + 8);
+            g.drawString(font, node.name(), listX + 39, cardY + 7, 0xFFF0F4F8, true);
+            String label = status(node, data);
+            g.drawString(font, label, listX + 39, cardY + 20, accent, false);
+            int total = node.quests().size();
+            int complete = Evolution.completedQuestCount(node, data);
+            String count = total == 0 ? "No quests" : complete + "/" + total + " quests";
+            g.drawString(font, count, listX + listW - 16 - font.width(count), cardY + 20, MUTED, false);
+            int barX = listX + 39, barY = cardY + 35, barW = listW - 56;
+            g.fill(barX, barY, barX + barW, barY + 3, 0xFF0A1017);
+            if (total > 0) g.fill(barX, barY, barX + barW * complete / total, barY + 3, accent);
+            if (over) hovered = node;
         }
-
-        // ---- root (the origin itself) ----
-        drawBox(g, baseX, baseY, origin.iconStack(), 0xFF55AAFF, false);
-
-        // ---- nodes ----
-        for (EvolutionNode n : origin.nodes()) {
-            double[] p = pos.get(n.id());
-            int cx = baseX + (int) p[0], cy = baseY + (int) p[1];
-            boolean over = mx >= cx - BOX / 2 && mx < cx + BOX / 2 && my >= cy - BOX / 2 && my < cy + BOX / 2;
-            if (over) hovered = n;
-            int border = borderFor(n, d);
-            drawBox(g, cx, cy, n.iconStack(), border, over);
-
-            g.pose().pushPose();
-            g.pose().translate(0, 0, 200);
-            if (border == C_LOCKED || border == C_BLOCKED) {
-                g.fill(cx - BOX / 2 + 1, cy - BOX / 2 + 1, cx + BOX / 2 - 1, cy + BOX / 2 - 1, 0x99000000);
-            }
-            if (!d.hasNode(n.id())) {
-                String s = String.valueOf(n.cost());
-                g.drawString(font, s, cx + BOX / 2 - font.width(s) - 2, cy + BOX / 2 - 9, 0xFFFFD700, true);
-            }
-            g.pose().popPose();
-        }
-
-        // ---- header ----
-        g.drawCenteredString(font, origin.name() + " \u2014 Evolutions", width / 2, 10, 0xFFFFD700);
-        g.drawCenteredString(font, "Evolution Points: " + d.getPoints(), width / 2, 24, 0xFFFFFFFF);
-        int bw = 160, bx = width / 2 - bw / 2;
-        g.fill(bx, 38, bx + bw, 42, 0xFF000000);
-        g.fill(bx, 38, bx + (int) (bw * d.getXp() / (float) origin.xpPerPoint()), 42, 0xFF55AAFF);
-        g.drawCenteredString(font, d.getXp() + " / " + origin.xpPerPoint() + " XP", width / 2, 46, 0xFF888899);
-        g.drawCenteredString(font, "Click a gold node to evolve  \u2022  Drag to pan  \u2022  ["
-                + KeyBinds.EVOLUTIONS.getTranslatedKeyMessage().getString() + "] to close",
-                width / 2, height - 14, 0xFF777788);
-
-        super.render(g, mx, my, pt);
-        if (hovered != null) g.renderComponentTooltip(font, tooltip(hovered, d), mx, my);
+        g.disableScissor();
     }
 
-    private void drawBox(GuiGraphics g, int cx, int cy, ItemStack icon, int border, boolean hover) {
-        UiUtil.panel(g, cx - BOX / 2, cy - BOX / 2, BOX, BOX, hover ? 0xFF2E2E48 : 0xFF181826, border);
-        g.renderItem(icon, cx - 8, cy - 8);
-    }
-
-    private void connect(GuiGraphics g, int x1, int y1, int x2, int y2, boolean active) {
-        int color = active ? C_UNLOCKED : C_LOCKED;
-        int sx = x1 + BOX / 2, ex = x2 - BOX / 2, mid = (sx + ex) / 2;
-        g.hLine(sx, mid, y1, color);
-        g.vLine(mid, Math.min(y1, y2), Math.max(y1, y2), color);
-        g.hLine(mid, ex, y2, color);
-    }
-
-    private List<String> wrap(String text, int width) {
-        List<String> out = new ArrayList<>();
-        for (FormattedText ft : font.getSplitter().splitLines(text, width, Style.EMPTY)) out.add(ft.getString());
-        return out;
-    }
-
-    private List<Component> tooltip(EvolutionNode n, LineageData d) {
-        List<Component> t = new ArrayList<>();
-        t.add(Component.literal(n.name()).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
-        for (String line : wrap(n.description(), 200)) t.add(Component.literal(line).withStyle(ChatFormatting.GRAY));
-        if (!n.abilities().isEmpty()) {
-            t.add(Component.empty());
-            for (Ability a : n.abilities()) {
-                t.add(Component.literal("\u2022 " + a.name + (a.isActive() ? " [Active]" : " [Passive]"))
-                        .withStyle(ChatFormatting.AQUA));
-            }
+    private void renderDetails(GuiGraphics g, int mouseX, int mouseY) {
+        UiUtil.panel(g, detailX, detailY, detailW, detailH, 0xC90A111B, 0xFF25394D);
+        EvolutionNode node = selected();
+        if (node == null) {
+            g.drawCenteredString(font, "Choose an evolution on the left", detailX + detailW / 2, detailY + 28, MUTED);
+            return;
         }
-        t.add(Component.empty());
-        if (d.hasNode(n.id())) {
-            t.add(Component.literal("Unlocked").withStyle(ChatFormatting.GREEN));
-        } else if (Evolution.isBlocked(origin, n, d)) {
-            t.add(Component.literal("Blocked: you chose a conflicting path").withStyle(ChatFormatting.RED));
-        } else if (!Evolution.requirementsMet(n, d)) {
-            List<String> missing = new ArrayList<>();
-            for (String r : n.requires()) if (!d.hasNode(r)) missing.add(origin.node(r).name());
-            t.add(Component.literal("Requires: " + String.join(", ", missing)).withStyle(ChatFormatting.RED));
-        } else if (d.getPoints() < n.cost()) {
-            t.add(Component.literal("Needs " + n.cost() + " point(s) - you have " + d.getPoints()).withStyle(ChatFormatting.YELLOW));
-        } else {
-            t.add(Component.literal("Click to evolve (cost " + n.cost() + ")").withStyle(ChatFormatting.GREEN));
+
+        LineageData data = ClientState.DATA;
+        int accent = statusColor(node, data);
+        g.renderItem(node.iconStack(), detailX + 12, detailY + 12);
+        g.drawString(font, node.name(), detailX + 36, detailY + 11, GOLD, true);
+        String label = status(node, data);
+        int labelW = font.width(label);
+        g.drawString(font, label, detailX + detailW - labelW - 12, detailY + 13, accent, true);
+
+        int descY = detailY + 34;
+        for (FormattedCharSequence line : font.split(Component.literal(node.description()), detailW - 24)) {
+            if (descY > detailY + 61) break;
+            g.drawString(font, line, detailX + 12, descY, 0xFFB7C4D2, false);
+            descY += 11;
         }
-        if (!n.excludes().isEmpty() && !d.hasNode(n.id())) {
+
+        if (!node.requires().isEmpty()) {
             List<String> names = new ArrayList<>();
-            for (String x : n.excludes()) names.add(origin.node(x).name());
-            t.add(Component.literal("Excludes: " + String.join(", ", names)).withStyle(ChatFormatting.DARK_RED));
+            for (String id : node.requires()) {
+                EvolutionNode required = origin.node(id);
+                if (required != null) names.add(required.name());
+            }
+            if (!names.isEmpty()) g.drawString(font, "PATH: " + String.join("  ›  ", names),
+                    detailX + 12, detailY + 68, Evolution.prerequisitesMet(node, data) ? GREEN : MUTED, false);
         }
-        return t;
+
+        int titleY = detailAreaTop;
+        g.drawString(font, "QUEST OBJECTIVES", detailX + 12, titleY, 0xFFE6EDF5, true);
+        String questCount = Evolution.completedQuestCount(node, data) + " / " + node.quests().size() + " complete";
+        g.drawString(font, questCount, detailX + detailW - 12 - font.width(questCount), titleY, MUTED, false);
+
+        int rowsTop = titleY + 18;
+        g.enableScissor(detailX + 5, rowsTop, detailX + detailW - 5, detailAreaBottom);
+        int contentY = rowsTop + 4 - detailScroll;
+        if (node.quests().isEmpty()) {
+            g.drawString(font, "No quest requirements for this evolution.", detailX + 14, contentY + 9, MUTED, false);
+            contentY += 28;
+        }
+        for (EvolutionQuest quest : node.quests()) {
+            int rowY = contentY;
+            boolean complete = Evolution.questProgress(node, quest, data) >= quest.amount;
+            UiUtil.panel(g, detailX + 8, rowY, detailW - 16, 39, ROW, complete ? 0xFF285845 : 0xFF243141);
+            String check = complete ? "✓" : "○";
+            g.drawString(font, check, detailX + 16, rowY + 8, complete ? GREEN : MUTED, true);
+            int textX = detailX + 34;
+            int textMax = detailW - 112;
+            String description = truncate(quest.description, textMax);
+            g.drawString(font, description, textX, rowY + 5, 0xFFE7EDF5, false);
+            int value = Evolution.questProgress(node, quest, data);
+            String amount = value + " / " + quest.amount;
+            g.drawString(font, amount, detailX + detailW - 12 - font.width(amount), rowY + 5,
+                    complete ? GREEN : MUTED, false);
+            int barX = textX, barY = rowY + 24, barW = detailW - 55;
+            g.fill(barX, barY, barX + barW, barY + 4, 0xFF081019);
+            if (value > 0) g.fill(barX, barY, barX + barW * value / quest.amount, barY + 4,
+                    complete ? GREEN : AQUA);
+            contentY += 45;
+        }
+
+        contentY += 4;
+        g.drawString(font, "REWARDS", detailX + 12, contentY, 0xFFE6EDF5, true);
+        contentY += 17;
+        if (node.abilities().isEmpty()) {
+            g.drawString(font, "No new abilities", detailX + 14, contentY, MUTED, false);
+            contentY += 18;
+        } else {
+            for (Ability ability : node.abilities()) {
+                g.renderItem(ability.iconStack(), detailX + 12, contentY - 3);
+                String kind = ability.isActive() ? "ACTIVE" : "PASSIVE";
+                g.drawString(font, ability.name + "  ·  " + kind, detailX + 33, contentY, AQUA, false);
+                contentY += 21;
+            }
+        }
+        if (Evolution.isBlocked(origin, node, data)) {
+            g.drawString(font, "This branch conflicts with an evolution you chose.", detailX + 12,
+                    contentY + 3, RED, false);
+        }
+        g.disableScissor();
+
+        boolean ready = Evolution.canUnlock(origin, node, data);
+        int buttonFill = ready ? 0xFFB98638 : data.hasNode(node.id()) ? 0xFF1E4938 : 0xFF202B38;
+        int buttonBorder = ready ? GOLD : data.hasNode(node.id()) ? GREEN : 0xFF354657;
+        UiUtil.panel(g, claimX, claimY, claimW, claimH, buttonFill, buttonBorder);
+        String buttonText = data.hasNode(node.id()) ? "EVOLUTION UNLOCKED"
+                : ready ? "CLAIM EVOLUTION" : "COMPLETE QUESTS TO UNLOCK";
+        g.drawCenteredString(font, buttonText, claimX + claimW / 2, claimY + 8,
+                ready ? 0xFF111820 : data.hasNode(node.id()) ? GREEN : MUTED);
+        if (ready && mouseX >= claimX && mouseX <= claimX + claimW
+                && mouseY >= claimY && mouseY <= claimY + claimH) {
+            g.renderTooltip(font, Component.literal("Claim " + node.name()), mouseX, mouseY);
+        }
+    }
+
+    private void renderFooter(GuiGraphics g) {
+        g.drawString(font, "Select a node to view its quests  •  Scroll to browse  •  ["
+                + KeyBinds.EVOLUTIONS.getTranslatedKeyMessage().getString() + "] to close",
+                panelX + 14, panelY + panelH - 16, MUTED, false);
+    }
+
+    private String truncate(String value, int maxWidth) {
+        if (font.width(value) <= maxWidth) return value;
+        String suffix = "…";
+        int end = value.length();
+        while (end > 0 && font.width(value.substring(0, end) + suffix) > maxWidth) end--;
+        return value.substring(0, end) + suffix;
+    }
+
+    private int maxListScroll() {
+        int viewport = listH - 48;
+        return Math.max(0, origin.nodes().size() * 53 - viewport);
+    }
+
+    private int detailContentHeight(EvolutionNode node) {
+        return 24 + node.quests().size() * 45 + 25 + Math.max(1, node.abilities().size()) * 21;
+    }
+
+    private int maxDetailScroll(EvolutionNode node) {
+        return Math.max(0, detailContentHeight(node) - (detailAreaBottom - detailAreaTop - 22));
     }
 
     @Override
-    public boolean mouseClicked(double mx, double my, int button) {
-        if (button == 0 && hovered != null && origin != null && Evolution.canUnlock(origin, hovered, ClientState.DATA)) {
-            Network.CHANNEL.sendToServer(new Packets.UnlockNode(hovered.id()));
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button != 0 || origin == null) return super.mouseClicked(mouseX, mouseY, button);
+        EvolutionNode node = selected();
+        if (mouseX >= claimX && mouseX <= claimX + claimW && mouseY >= claimY && mouseY <= claimY + claimH
+                && node != null && Evolution.canUnlock(origin, node, ClientState.DATA)) {
+            Network.CHANNEL.sendToServer(new Packets.UnlockNode(node.id()));
             return true;
         }
-        return super.mouseClicked(mx, my, button);
+
+        int viewportTop = listY + 39;
+        int viewportBottom = listY + listH - 8;
+        if (mouseX >= listX + 6 && mouseX < listX + listW - 6
+                && mouseY >= viewportTop && mouseY < viewportBottom) {
+            int index = (int) ((mouseY - viewportTop + listScroll) / 53);
+            if (index >= 0 && index < origin.nodes().size()) {
+                selectedId = origin.nodes().get(index).id();
+                detailScroll = 0;
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseDragged(double mx, double my, int button, double dx, double dy) {
-        if (button == 1 || button == 2 || (button == 0 && hovered == null)) {
-            panX += dx;
-            panY += dy;
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (origin != null && mouseX >= listX && mouseX <= listX + listW
+                && mouseY >= listY && mouseY <= listY + listH) {
+            listScroll = Math.max(0, Math.min(maxListScroll(), listScroll - (int) (delta * 48)));
             return true;
         }
-        return super.mouseDragged(mx, my, button, dx, dy);
+        EvolutionNode node = selected();
+        if (node != null && mouseX >= detailX && mouseX <= detailX + detailW
+                && mouseY >= detailY && mouseY <= detailY + detailH) {
+            detailScroll = Math.max(0, Math.min(maxDetailScroll(node), detailScroll - (int) (delta * 40)));
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     @Override
-    public boolean keyPressed(int key, int scan, int mods) {
-        if (KeyBinds.EVOLUTIONS.matches(key, scan)) {
+    public boolean keyPressed(int key, int scanCode, int modifiers) {
+        if (key == 256 || KeyBinds.EVOLUTIONS.matches(key, scanCode)) {
             onClose();
             return true;
         }
-        return super.keyPressed(key, scan, mods);
+        if (origin != null && (key == 264 || key == 265) && !origin.nodes().isEmpty()) {
+            int index = 0;
+            for (int i = 0; i < origin.nodes().size(); i++) if (origin.nodes().get(i).id().equals(selectedId)) index = i;
+            index = key == 264 ? Math.min(origin.nodes().size() - 1, index + 1) : Math.max(0, index - 1);
+            selectedId = origin.nodes().get(index).id();
+            detailScroll = 0;
+            return true;
+        }
+        return super.keyPressed(key, scanCode, modifiers);
     }
 
-    @Override public boolean isPauseScreen() { return false; }
+    @Override
+    public boolean isPauseScreen() { return false; }
 }

@@ -25,23 +25,16 @@ public final class AbilityHud {
         LineageData data = ClientState.DATA;
         List<Ability> actives = origin.activeAbilitiesFor(data);
         int n = Math.min(actives.size(), KeyBinds.ABILITY.length);
-        if (n == 0) return;
 
         Font font = mc.font;
         int size = 22, gap = 4;
-        int total = n * (size + gap) - gap;
+        int total = n == 0 ? 0 : n * (size + gap) - gap;
         int x0 = Math.min(w / 2 + 98, w - total - 6);
         int y0 = h - size - 4;
         long now = mc.level.getGameTime();
 
-        // Evolution progress bar above the slots.
-        int barY = y0 - 15;
-        g.fill(x0, barY, x0 + total, barY + 3, 0xAA000000);
-        g.fill(x0, barY, x0 + (int) (total * (data.getXp() / (float) origin.xpPerPoint())), barY + 3, 0xFF55AAFF);
-        if (data.getPoints() > 0) {
-            String s = "\u2605 " + data.getPoints() + " [" + KeyBinds.EVOLUTIONS.getTranslatedKeyMessage().getString() + "]";
-            g.drawString(font, s, x0, barY - 10, 0xFFFFD700, true);
-        }
+        String journal = "EVOLUTIONS [" + KeyBinds.EVOLUTIONS.getTranslatedKeyMessage().getString() + "]";
+        g.drawString(font, journal, x0, y0 - 12, 0xFFE4C47A, true);
 
         for (int i = 0; i < n; i++) {
             Ability a = actives.get(i);
