@@ -14,11 +14,11 @@ Everything about origins, abilities and evolutions is **JSON** — no Java neede
 
 | Key | Action |
 |-----|--------|
-| `Z` `X` `C` | Use active ability 1 / 2 / 3 (rebindable) |
+| `Z` `X` `C` `R` `G` `H` `J` `K` | Use active abilities 1–8 (rebindable) |
 | `V` | Open the Evolution tree |
 
 Keybinds only work in the world when no menu or chat screen is open. Rebind them in
-**Options → Controls → Key Binds → Lineage**. The first active ability is on `Z` by default;
+**Options → Controls → Key Binds → Lineage**. Active abilities are shown with their keys;
 passive abilities do not use a key.
 
 First join opens the origin selection screen. Open Evolutions with `V`, select a node, and
@@ -41,7 +41,11 @@ Create `data/<namespace>/lineage/origins/<name>.json` in a datapack, or in
 `src/main/resources/`. For a world datapack, put it under
 `saves/<world>/datapacks/<pack>/data/<namespace>/lineage/origins/<name>.json`.
 Run `/reload` to pick up changes live. Errors are logged with the file name. Use
-`merling.json` as a template. The built-in test origin is `lineage:glowcap`.
+`merling.json` as a template. Built-in origins include `lineage:glowcap` and the five-stage
+lightning speedster `lineage:quickstep`. Quickstep's fifth evolution grants visible lightning
+horns and jagged wings, and active key slots support up to eight abilities. The standard heart
+icons are replaced by a compact bar with exact current and maximum HP, keeping large health pools
+readable.
 
 ```jsonc
 {

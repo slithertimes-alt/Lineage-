@@ -1,0 +1,183 @@
+{
+  "name": "Quickstep",
+  "description": "A living storm-runner. Build momentum, master the storm, and ascend as its lightning god.",
+  "icon": "minecraft:lightning_rod",
+  "impact": 3,
+  "abilities": [
+    {
+      "id": "quickstep_speed", "type": "attribute", "name": "Quickstep",
+      "description": "Move 18% faster.", "icon": "minecraft:sugar",
+      "attribute": "minecraft:generic.movement_speed", "amount": 0.18, "operation": "multiply_base"
+    },
+    {
+      "id": "storm_toughness", "type": "damage_modifier", "name": "Storm-Tough",
+      "description": "Take 20% less projectile damage.", "icon": "minecraft:shield",
+      "damage_type": "#minecraft:is_projectile", "multiplier": 0.8
+    },
+    {
+      "id": "nimble_landing", "type": "damage_modifier", "name": "Nimble Landing",
+      "description": "Ignore fall damage.", "icon": "minecraft:feather",
+      "damage_type": "minecraft:fall", "multiplier": 0
+    },
+    {
+      "id": "static_dash", "type": "dash", "name": "Static Dash",
+      "description": "Snap forward in a burst of blue-white static.", "icon": "minecraft:feather",
+      "strength": 1.65, "upward": 0.12, "cooldown": 3, "hunger_cost": 1,
+      "sound": "minecraft:entity.player.attack.sweep"
+    },
+    {
+      "id": "static_burst", "type": "active_effect", "name": "Static Burst",
+      "description": "Charge yourself with Speed for four seconds.", "icon": "minecraft:glowstone_dust",
+      "effect": "minecraft:speed", "amplifier": 1, "duration": 80, "target": "self",
+      "cooldown": 10, "hunger_cost": 1, "sound": "minecraft:block.beacon.activate"
+    }
+  ],
+  "evolutions": [
+    {
+      "id": "charged_step", "name": "Charged Step",
+      "description": "Your heartbeat begins to crackle with stored power.",
+      "icon": "minecraft:amethyst_shard",
+      "quests": [
+        { "id": "creepers", "type": "kill", "entity": "minecraft:creeper", "amount": 24,
+          "description": "Defeat 24 Creepers" },
+        { "id": "sprint_time", "type": "condition_time", "condition": "sprinting", "seconds": 1800,
+          "description": "Sprint for 30 minutes total" },
+        { "id": "copper", "type": "hold_item", "item": "minecraft:copper_ingot", "amount": 32,
+          "description": "Carry 32 Copper Ingots" }
+      ],
+      "abilities": [
+        { "id": "charged_speed", "type": "attribute", "name": "Charged Legs",
+          "description": "Another 10% movement speed.", "icon": "minecraft:lightning_rod",
+          "attribute": "minecraft:generic.movement_speed", "amount": 0.10, "operation": "multiply_base" },
+        { "id": "runner_haste", "type": "effect", "name": "Runner's Focus",
+          "description": "Haste while sprinting.", "icon": "minecraft:golden_carrot",
+          "effect": "minecraft:haste", "condition": "sprinting" },
+        { "id": "static_field", "type": "active_effect", "name": "Static Field",
+          "description": "Rattle nearby enemies with Slowness.", "icon": "minecraft:amethyst_shard",
+          "effect": "minecraft:slowness", "amplifier": 1, "duration": 80,
+          "target": "nearby", "radius": 4.5, "cooldown": 12, "hunger_cost": 2,
+          "sound": "minecraft:block.respawn_anchor.charge" }
+      ]
+    },
+    {
+      "id": "stormrunner", "name": "Stormrunner",
+      "description": "You outrun arrows and climb the air on a rolling thunderhead.",
+      "icon": "minecraft:phantom_membrane", "requires": ["charged_step"],
+      "quests": [
+        { "id": "witches", "type": "kill", "entity": "minecraft:witch", "amount": 16,
+          "description": "Defeat 16 Witches" },
+        { "id": "rods", "type": "hold_item", "item": "minecraft:lightning_rod", "amount": 24,
+          "description": "Carry 24 Lightning Rods" },
+        { "id": "air_time", "type": "condition_time", "condition": "airborne", "seconds": 600,
+          "description": "Spend 10 minutes airborne" }
+      ],
+      "abilities": [
+        { "id": "storm_surge", "type": "dash", "name": "Storm Surge",
+          "description": "Launch through the air with a powerful lightning dash.", "icon": "minecraft:phantom_membrane",
+          "strength": 2.6, "upward": 0.22, "cooldown": 6, "hunger_cost": 2,
+          "sound": "minecraft:entity.ender_dragon.flap" },
+        { "id": "storm_jump", "type": "effect", "name": "Updraft",
+          "description": "Jump higher than ordinary runners.", "icon": "minecraft:rabbit_foot",
+          "effect": "minecraft:jump_boost", "amplifier": 0 },
+        { "id": "arrow_dancer", "type": "damage_modifier", "name": "Arrow Dancer",
+          "description": "Take 40% less projectile damage.", "icon": "minecraft:shield",
+          "damage_type": "#minecraft:is_projectile", "multiplier": 0.6 }
+      ]
+    },
+    {
+      "id": "thunderheart", "name": "Thunderheart",
+      "description": "A storm beats inside your chest. Your footfalls shake the ground.",
+      "icon": "minecraft:heart_of_the_sea", "requires": ["stormrunner"],
+      "quests": [
+        { "id": "guardians", "type": "kill", "entity": "minecraft:guardian", "amount": 20,
+          "description": "Defeat 20 Guardians" },
+        { "id": "drowned", "type": "kill", "entity": "minecraft:drowned", "amount": 24,
+          "description": "Defeat 24 Drowned" },
+        { "id": "end", "type": "visit_dimension", "dimension": "minecraft:the_end",
+          "description": "Reach the End" },
+        { "id": "heart", "type": "hold_item", "item": "minecraft:heart_of_the_sea", "amount": 1,
+          "description": "Carry a Heart of the Sea" }
+      ],
+      "abilities": [
+        { "id": "thunder_clap", "type": "active_effect", "name": "Thunderclap",
+          "description": "Disorient nearby enemies with Weakness.", "icon": "minecraft:trident",
+          "effect": "minecraft:weakness", "amplifier": 1, "duration": 120,
+          "target": "nearby", "radius": 7, "cooldown": 18, "hunger_cost": 2,
+          "sound": "minecraft:entity.lightning_bolt.thunder" },
+        { "id": "storm_heart_health", "type": "attribute", "name": "Storm Heart",
+          "description": "Gain four extra hearts.", "icon": "minecraft:heart_of_the_sea",
+          "attribute": "minecraft:generic.max_health", "amount": 8 },
+        { "id": "thunder_strength", "type": "effect", "name": "Thunderous Strength",
+          "description": "Strength while in the End.", "icon": "minecraft:blaze_powder",
+          "effect": "minecraft:strength", "condition": "in_end" }
+      ]
+    },
+    {
+      "id": "tempest_avatar", "name": "Tempest Avatar",
+      "description": "Become the eye of the storm and call lightning downrange.",
+      "icon": "minecraft:trident", "requires": ["thunderheart"],
+      "quests": [
+        { "id": "dragon", "type": "kill", "entity": "minecraft:ender_dragon", "amount": 1,
+          "description": "Defeat the Ender Dragon" },
+        { "id": "end_time", "type": "condition_time", "condition": "in_end", "seconds": 1200,
+          "description": "Spend 20 minutes in the End" },
+        { "id": "pearls", "type": "hold_item", "item": "minecraft:ender_pearl", "amount": 16,
+          "description": "Carry 16 Ender Pearls" }
+      ],
+      "abilities": [
+        { "id": "lightning_lance", "type": "command", "name": "Lightning Lance",
+          "description": "Hurl a lightning strike five blocks ahead.", "icon": "minecraft:trident",
+          "commands": [
+            "execute at @s run particle minecraft:electric_spark ^ ^1 ^5 0.35 0.35 0.35 0.08 45",
+            "execute at @s run summon minecraft:lightning_bolt ^ ^ ^7"
+          ],
+          "cooldown": 14, "hunger_cost": 2, "sound": "minecraft:entity.lightning_bolt.thunder" },
+        { "id": "lightning_resist", "type": "damage_modifier", "name": "Lightningproof",
+          "description": "Lightning cannot harm you.", "icon": "minecraft:lightning_rod",
+          "damage_type": "minecraft:lightning_bolt", "multiplier": 0 },
+        { "id": "tempest_speed", "type": "attribute", "name": "Tempest Speed",
+          "description": "Move 12% faster.", "icon": "minecraft:glowstone_dust",
+          "attribute": "minecraft:generic.movement_speed", "amount": 0.12, "operation": "multiply_base" }
+      ]
+    },
+    {
+      "id": "lightning_god", "name": "Lightning God",
+      "description": "Your final form: crackling horns, radiant lightning wings, and the speed of a falling star.",
+      "icon": "minecraft:nether_star", "requires": ["tempest_avatar"],
+      "quests": [
+        { "id": "wither_kings", "type": "kill", "entity": "minecraft:wither", "amount": 3,
+          "description": "Defeat 3 Withers" },
+        { "id": "dragon_again", "type": "kill", "entity": "minecraft:ender_dragon", "amount": 2,
+          "description": "Defeat the Ender Dragon twice" },
+        { "id": "stars", "type": "hold_item", "item": "minecraft:nether_star", "amount": 4,
+          "description": "Carry 4 Nether Stars" },
+        { "id": "final_run", "type": "condition_time", "condition": "sprinting", "seconds": 3600,
+          "description": "Sprint for one hour total" }
+      ],
+      "abilities": [
+        { "id": "divine_overload", "type": "command", "name": "Divine Overload",
+          "description": "Flood yourself with Strength, Speed, and Resistance.", "icon": "minecraft:nether_star",
+          "commands": [
+            "effect give @s minecraft:strength 12 2 true",
+            "effect give @s minecraft:speed 12 2 true",
+            "effect give @s minecraft:resistance 12 1 true",
+            "particle minecraft:electric_spark ~ ~1 ~ 0.8 1 0.8 0.18 100"
+          ],
+          "cooldown": 45, "hunger_cost": 4, "sound": "minecraft:entity.lightning_bolt.impact" },
+        { "id": "skybreaker", "type": "dash", "name": "Skybreaker",
+          "description": "Rocket upward and forward on lightning wings.", "icon": "minecraft:firework_rocket",
+          "strength": 3.2, "upward": 1.25, "cooldown": 7, "hunger_cost": 3,
+          "sound": "minecraft:entity.ender_dragon.flap" },
+        { "id": "godspeed", "type": "attribute", "name": "Godspeed",
+          "description": "Your final form is 25% faster.", "icon": "minecraft:lightning_rod",
+          "attribute": "minecraft:generic.movement_speed", "amount": 0.25, "operation": "multiply_base" },
+        { "id": "divine_vitality", "type": "attribute", "name": "Divine Vitality",
+          "description": "Gain another ten hearts.", "icon": "minecraft:golden_apple",
+          "attribute": "minecraft:generic.max_health", "amount": 20 },
+        { "id": "storm_body", "type": "damage_modifier", "name": "Storm Body",
+          "description": "Take 25% less mob damage.", "icon": "minecraft:netherite_chestplate",
+          "damage_type": "#minecraft:is_player_attack", "multiplier": 0.75 }
+      ]
+    }
+  ]
+}
